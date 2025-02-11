@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import { generateCharacterResponse } from "../services/openai";
+import { Dialogue } from "../models/dialogue";
 
 const router = express.Router();
 
@@ -13,8 +14,23 @@ router.post("/", async (req: Request, res: Response) => {
   }
 
   try {
-    const response = await generateCharacterResponse(character, user_message);
-    res.status(200).json({ response });
+    //db search
+    const existingDialogue = await Dialogue.findOne({
+      character: character,
+      dialogues: { $regex: new RegExp(user_message, "i") },
+    });
+
+    if (existingDialogue) {
+      const matchedDialogue = existingDialogue.dialogues.find((dialogue) =>
+        new RegExp(user_message, "i").test(dialogue)
+      );
+      res.json({ response: matchedDialogue });
+      return;
+    }
+
+    //ai response
+    const aiResponse = await generateCharacterResponse(character, user_message);
+    res.status(200).json({ response: aiResponse });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
