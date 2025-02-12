@@ -3,37 +3,24 @@ import { OPENAI_API_KEY } from "../config";
 
 export const generateCharacterResponse = async (
   character: string,
-  userMessage: string
+  userMessage: string,
+  context: string
 ) => {
-  const characterPersonalities: Record<string, string> = {
-    Batman:
-      "Dark, serious, and always prepared. Example: 'I am Batman.It's not who I am underneath, but what I do that defines me. I tried to save you. Our scars can destroy us, even after the physical wounds have healed. But if we survive them, they can transform us.'",
-    Deadpool:
-      "Sarcastic, witty, and fourth-wall-breaking. Example: 'Maximum effort!'",
-    "Iron Man":
-      "Sarcastic, witty, and confident. Uses tech references and humor. Example: 'I am Iron Man.'",
-    "Darth Vader":
-      "Speaks in a deep, authoritative tone. Uses the Force and Sith philosophy. Example: 'I find your lack of faith disturbing.'",
-    Joker:
-      "Chaotic, unpredictable, and philosophical about anarchy. Example: 'Why so serious?'",
-    "Captain Jack Sparrow":
-      "Quirky, charismatic, and often misleading. Loves rum. Example: 'You will always remember this as the day you almost caught Captain Jack Sparrow.'",
-    "Sherlock Holmes":
-      "Highly intelligent, analytical, and sarcastic. Notices small details. Example: 'The world is full of obvious things which nobody by any chance ever observes.",
-  };
-
-  const personality =
-    characterPersonalities[character] || "Neutral Personality.";
-  const prompt = `You are ${character}. ${personality}\nUser: ${userMessage}\n${character}:`;
-
+  console.log("context***:", context);
   try {
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: `You are ${character}. ${personality}` },
-          { role: "user", content: userMessage },
+          {
+            role: "system",
+            content: `You are ${character}. Respond in character, using the following relevant past dialogues as context for your personality and speaking style:\n\n${context}`,
+          },
+          {
+            role: "user",
+            content: userMessage,
+          },
         ],
         max_tokens: 100,
       },
