@@ -1,12 +1,10 @@
 import { Queue, QueueEvents, Worker } from "bullmq";
 import Redis from "ioredis";
-import dotenv from "dotenv";
 import { generateCharacterResponse } from "./openai";
 import { generateEmbedding } from "./embedding";
+import { UPSTASH_REDIS_URL } from "../config";
 
-dotenv.config();
-
-const connection = new Redis(process.env.UPSTASH_REDIS_URL!, {
+const connection = new Redis(UPSTASH_REDIS_URL!, {
   maxRetriesPerRequest: null,
 });
 

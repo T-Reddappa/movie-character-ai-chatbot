@@ -1,14 +1,12 @@
 import { Pinecone } from "@pinecone-database/pinecone";
-import dotenv from "dotenv";
+import { PINECONE_API_KEY } from "../config";
 
-dotenv.config();
-
-if (!process.env.PINECONE_API_KEY) {
+if (!PINECONE_API_KEY) {
   throw new Error("PINECONE_API_KEY not found");
 }
 
 const pinecone = new Pinecone({
-  apiKey: process.env.PINECONE_API_KEY,
+  apiKey: PINECONE_API_KEY,
 });
 
 export default pinecone;

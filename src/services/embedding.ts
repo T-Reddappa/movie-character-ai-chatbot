@@ -1,9 +1,7 @@
 import { OpenAI } from "openai";
-import dotenv from "dotenv";
+import { OPENAI_API_KEY } from "../config";
 
-dotenv.config();
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
 export const generateEmbedding = async (text: string) => {
   try {

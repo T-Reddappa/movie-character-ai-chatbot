@@ -1,13 +1,11 @@
 import Redis from "ioredis";
-import dotenv from "dotenv";
 
-import pinecone from "./pinecone";
+import pinecone from "../scripts/pinecone";
 import { embeddingQueue, embeddingQueueEvents } from "./queue";
-
-dotenv.config();
+import { UPSTASH_REDIS_URL } from "../config";
 
 const index = pinecone.index("chatbot-rag");
-const redis = new Redis(process.env.UPSTASH_REDIS_URL!, {
+const redis = new Redis(UPSTASH_REDIS_URL!, {
   maxRetriesPerRequest: null,
 });
 
@@ -21,13 +19,7 @@ export const searchDialogue = async (query: string) => {
     return cachedData;
   }
 
-  // //if not in cache, fetch from vector db
-  // const queryEmbedding = await generateEmbedding(query);
-  // if (!queryEmbedding) {
-  //   throw new Error("Failed to generate embedding for the query");
-  // }
-
-  //generate embedding using queue
+  //if not in cache, generate embedding using queue
   const job = await embeddingQueue.add("generateEmbedding", { text: query });
   const queryEmbedding = await job.waitUntilFinished(
     embeddingQueueEvents,

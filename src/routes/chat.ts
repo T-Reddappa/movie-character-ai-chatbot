@@ -29,29 +29,8 @@ router.post("/", async (req: Request, res: Response) => {
 
     res.status(200).json({ response });
   } catch (error) {
-    -res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 export default router;
-
-//db search
-// const existingDialogue = await Dialogue.findOne({
-//   character: character,
-//   dialogues: { $regex: new RegExp(user_message, "i") },
-// });
-
-// if (existingDialogue) {
-//   const matchedDialogue = existingDialogue.dialogues.find((dialogue) =>
-//     new RegExp(user_message, "i").test(dialogue)
-//   );
-//   res.json({ response: matchedDialogue });
-//   return;
-// }
-
-// //ai response
-// const aiResponse = await generateCharacterResponse(
-//   character,
-//   user_message,
-//   context
-// );
