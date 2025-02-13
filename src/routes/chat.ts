@@ -2,9 +2,9 @@ import express, { Request, Response } from "express";
 import { searchDialogue } from "../services/search";
 import { aiResponseQueue, aiResponseQueueEvents } from "../services/queue";
 
-const router = express.Router();
+const chatRouter = express.Router();
 
-router.post("/", async (req: Request, res: Response) => {
+chatRouter.post("/", async (req: Request, res: Response) => {
   const { character, user_message } = req.body;
 
   if (!character || !user_message) {
@@ -33,4 +33,4 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-export default router;
+export default chatRouter;
