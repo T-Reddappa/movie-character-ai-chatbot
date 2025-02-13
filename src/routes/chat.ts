@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
-import { generateCharacterResponse } from "../services/openai";
 import { searchDialogue } from "../services/search";
+import { aiResponseQueue, aiResponseQueueEvents } from "../services/queue";
 
 const router = express.Router();
 
@@ -17,13 +17,17 @@ router.post("/", async (req: Request, res: Response) => {
     const retrievedDialogue = await searchDialogue(user_message);
     const context = String(retrievedDialogue);
     console.log("context#:", context);
-    //ai response
-    const aiResponse = await generateCharacterResponse(
+
+    //ai response - bullmq queue
+    const job = await aiResponseQueue.add("generateResponse", {
       character,
       user_message,
-      context
-    );
-    res.status(200).json({ response: aiResponse });
+      context,
+    });
+
+    const response = await job.waitUntilFinished(aiResponseQueueEvents, 20000);
+
+    res.status(200).json({ response });
   } catch (error) {
     -res.status(500).json({ error: "Internal server error" });
   }
@@ -44,3 +48,10 @@ export default router;
 //   res.json({ response: matchedDialogue });
 //   return;
 // }
+
+// //ai response
+// const aiResponse = await generateCharacterResponse(
+//   character,
+//   user_message,
+//   context
+// );

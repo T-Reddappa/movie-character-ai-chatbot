@@ -1,15 +1,14 @@
-import { Redis } from "@upstash/redis";
+import Redis from "ioredis";
 import dotenv from "dotenv";
 
 import pinecone from "./pinecone";
-import { generateEmbedding } from "./embedding";
+import { embeddingQueue, embeddingQueueEvents } from "./queue";
 
 dotenv.config();
 
 const index = pinecone.index("chatbot-rag");
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+const redis = new Redis(process.env.UPSTASH_REDIS_URL!, {
+  maxRetriesPerRequest: null,
 });
 
 export const searchDialogue = async (query: string) => {
@@ -22,8 +21,19 @@ export const searchDialogue = async (query: string) => {
     return cachedData;
   }
 
-  //if not in cache, fetch from vector db
-  const queryEmbedding = await generateEmbedding(query);
+  // //if not in cache, fetch from vector db
+  // const queryEmbedding = await generateEmbedding(query);
+  // if (!queryEmbedding) {
+  //   throw new Error("Failed to generate embedding for the query");
+  // }
+
+  //generate embedding using queue
+  const job = await embeddingQueue.add("generateEmbedding", { text: query });
+  const queryEmbedding = await job.waitUntilFinished(
+    embeddingQueueEvents,
+    20000
+  );
+
   if (!queryEmbedding) {
     throw new Error("Failed to generate embedding for the query");
   }
@@ -43,7 +53,7 @@ export const searchDialogue = async (query: string) => {
   console.log(matchedDialogue);
 
   //store in redis cache
-  await redis.set(cacheKey, matchedDialogue, { ex: 3600 });
+  await redis.set(cacheKey, matchedDialogue as string, "EX", 3600);
 
   return matchedDialogue;
 };
