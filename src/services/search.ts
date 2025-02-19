@@ -2,7 +2,7 @@ import Redis from "ioredis";
 
 import pinecone from "../scripts/pinecone";
 import { embeddingQueue, embeddingQueueEvents } from "./queue";
-import { UPSTASH_REDIS_URL } from "../config";
+import { UPSTASH_REDIS_URL } from "../utils/config";
 
 const index = pinecone.index("chatbot-rag");
 const redis = new Redis(UPSTASH_REDIS_URL!, {

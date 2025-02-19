@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
-import pinecone from "../scripts/pinecone";
-import { generateEmbedding } from "./embedding";
+
+import pinecone from "./pinecone";
+import { generateEmbedding } from "../services/embedding";
 
 const index = pinecone.index("chatbot-rag");
 

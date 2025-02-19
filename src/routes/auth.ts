@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import { User } from "../models/user";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config";
+import { JWT_SECRET } from "../utils/config";
 
 const authRouter = express.Router();
 

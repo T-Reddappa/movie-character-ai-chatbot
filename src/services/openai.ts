@@ -1,5 +1,5 @@
 import axios from "axios";
-import { OPENAI_API_KEY } from "../config";
+import { OPENAI_API_KEY } from "../utils/config";
 
 export const generateCharacterResponse = async (
   character: string,

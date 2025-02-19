@@ -1,8 +1,9 @@
 import { Queue, QueueEvents, Worker } from "bullmq";
 import Redis from "ioredis";
+
 import { generateCharacterResponse } from "./openai";
 import { generateEmbedding } from "./embedding";
-import { UPSTASH_REDIS_URL } from "../config";
+import { UPSTASH_REDIS_URL } from "../utils/config";
 
 const connection = new Redis(UPSTASH_REDIS_URL!, {
   maxRetriesPerRequest: null,

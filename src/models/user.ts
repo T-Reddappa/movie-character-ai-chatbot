@@ -17,10 +17,13 @@ const UserSchema = new Schema<IUserSchmema>({
     required: true,
     unique: true,
     trim: true,
+    minlength: 5,
+    maxlength: 20,
   },
   password: {
     type: String,
     required: true,
+    minlength: 6,
   },
 });
 

@@ -1,28 +1,26 @@
 import express, { Request } from "express";
 import cors from "cors";
-import { WebSocketServer, WebSocket } from "ws";
+import { WebSocketServer } from "ws";
 import { rateLimit } from "express-rate-limit";
 import jwt from "jsonwebtoken";
+import { LRUCache } from "lru-cache";
+import { IncomingMessage } from "node:http";
 
-import { JWT_SECRET, PORT } from "./config";
+import { JWT_SECRET, PORT } from "./utils/config";
 import { connectDB } from "./scripts/database";
 import { searchDialogue } from "./services/search";
 import { aiResponseQueue, aiResponseQueueEvents } from "./services/queue";
-import { User, UserChat } from "./models/user";
+import { User } from "./models/user";
 import authRouter from "./routes/auth";
-import { IncomingMessage } from "node:http";
-import { LRUCache } from "lru-cache";
+import { saveChat } from "./services/saveChat";
+import { ExtendedWebSocket } from "./utils/types";
+import { send } from "node:process";
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
 connectDB();
-
-// Extend WebSocket to include username property
-interface ExtendedWebSocket extends WebSocket {
-  username?: string;
-}
 
 const wss = new WebSocketServer({ port: 8080 });
 
@@ -37,39 +35,15 @@ const rateLimiter = rateLimit({
 });
 
 app.use(rateLimiter);
+app.get("/", (req, res) => {
+  res.send(`<h1 style="text-align:center">AI Movie Character Chatbot</h1>`);
+});
+
 app.use("/auth", authRouter);
 
 // app.use("/chat", chatRouter);
 
 const tokenCache = new LRUCache<string, any>({ max: 1000 });
-
-async function saveChat(
-  username: string,
-  character: string,
-  role: string,
-  content: string
-): Promise<void> {
-  try {
-    process.nextTick(async () => {
-      await UserChat.updateOne(
-        { username, character },
-        {
-          $push: {
-            messages: {
-              role,
-              content,
-              timestamp: new Date(),
-            },
-          },
-        },
-        { upsert: true, new: true }
-      );
-    });
-  } catch (error) {
-    console.error("Error saving chat:", error);
-    throw new Error("Failed to save chat message");
-  }
-}
 
 wss.on("connection", async (ws: ExtendedWebSocket, req: IncomingMessage) => {
   try {
