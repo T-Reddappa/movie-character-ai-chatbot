@@ -32,7 +32,7 @@ export const generateCharacterResponse = async (
       {
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: `You are ${character}. ${personality}` },
+          { role: "system", content: `You are ${character}. ${prompt}` },
           { role: "user", content: userMessage },
         ],
         max_tokens: 100,
