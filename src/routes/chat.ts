@@ -15,28 +15,22 @@ router.post("/", async (req: Request, res: Response) => {
   }
 
   try {
-    //db search
-    // const existingDialogue = await Dialogue.findOne({
-    //   character: character,
-    //   dialogues: { $regex: new RegExp(user_message, "i") },
-    // });
-
-    // if (existingDialogue) {
-    //   const matchedDialogue = existingDialogue.dialogues.find((dialogue) =>
-    //     new RegExp(user_message, "i").test(dialogue)
-    //   );
-    //   res.json({ response: matchedDialogue });
-    //   return;
-    // }
     const retrievedDocs = await searchDocuments(user_message);
     const context = String(retrievedDocs[0]?.dialogue || "");
     console.log("context#:", context);
+
     //ai response
     const aiResponse = await generateCharacterResponse(
       character,
       user_message,
       context
     );
+
+    if (!aiResponse) {
+      res.status(404).json({ error: "No response generated" });
+      return;
+    }
+
     res.status(200).json({ response: aiResponse });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
