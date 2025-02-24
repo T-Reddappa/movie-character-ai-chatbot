@@ -10,6 +10,7 @@ router.post("/", async (req: Request, res: Response) => {
     res
       .status(400)
       .json({ error: "character and user_message properties are required." });
+    return;
   }
 
   try {
