@@ -15,7 +15,8 @@ router.post("/", async (req: Request, res: Response) => {
   try {
     const response = await generateCharacterResponse(character, user_message);
     if (!response) {
-      return res.status(404).json({ error: "No response generated" });
+      res.status(404).json({ error: "No response generated" });
+      return;
     }
 
     res.status(200).json({ response });
