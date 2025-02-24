@@ -25,6 +25,7 @@ export const generateCharacterResponse = async (
   const personality =
     characterPersonalities[character] || "Neutral Personality.";
   const prompt = `You are ${character}. ${personality}\nUser: ${userMessage}\n${character}:`;
+  console.log(prompt);
 
   try {
     const response = await axios.post(
@@ -32,7 +33,7 @@ export const generateCharacterResponse = async (
       {
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: `You are ${character}. ${personality}` },
+          { role: "system", content: `${prompt}` },
           { role: "user", content: userMessage },
         ],
         max_tokens: 100,
