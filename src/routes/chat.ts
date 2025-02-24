@@ -24,12 +24,18 @@ router.post("/", async (req: Request, res: Response) => {
       const matchedDialogue = existingDialogue.dialogues.find((dialogue) =>
         new RegExp(user_message, "i").test(dialogue)
       );
-      res.json({ response: matchedDialogue });
+      console.log("matchedDialogue", matchedDialogue);
+      res.status(200).json({ response: matchedDialogue });
       return;
     }
 
     //ai response
     const aiResponse = await generateCharacterResponse(character, user_message);
+    if (!aiResponse) {
+      res.status(404).json({ error: "No response generated" });
+      return;
+    }
+    console.log("aiResponse", aiResponse);
     res.status(200).json({ response: aiResponse });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
