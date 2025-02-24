@@ -1,5 +1,6 @@
 import express, { Request } from "express";
 import cors from "cors";
+import { createServer } from "node:http";
 import { WebSocketServer } from "ws";
 import { rateLimit } from "express-rate-limit";
 import jwt from "jsonwebtoken";
@@ -20,9 +21,11 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+const server = createServer(app);
+
 connectDB();
 
-const wss = new WebSocketServer({ port: 8080 });
+const wss = new WebSocketServer({ server });
 
 //rate limiting(5 requests/sec per user)
 const rateLimiter = rateLimit({
@@ -41,6 +44,10 @@ app.get("/", (req, res) => {
 
 app.use("/auth", authRouter);
 
+app.use((req, res, next) => {
+  if (req.headers.upgrade === "websocket") return;
+  next();
+});
 // app.use("/chat", chatRouter);
 
 const tokenCache = new LRUCache<string, any>({ max: 1000 });
@@ -131,6 +138,6 @@ wss.on("connection", async (ws: ExtendedWebSocket, req: IncomingMessage) => {
   }
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
