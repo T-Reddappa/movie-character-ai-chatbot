@@ -7,8 +7,8 @@ A scalable backend application for an AI-powered movie character chatbot. This p
 - **Real-time Communication:** Uses WebSocketServer for real-time chat interactions.
 - **Rate Limiting:** Protects against abuse by limiting API calls (5 requests/second per user).
 - **Background Processing:** Utilizes BullMQ with Redis to handle asynchronous tasks (e.g., AI response generation, query embedding).
-- **Caching:** Implements caching strategies to improve performance.
-- **Database Integration:** Connects to MongoDB for user management (and other app data).
+- **Caching:** Implements caching to retrive character dialogue retrievals fast.
+- **Database Integration:** Connects to MongoDB for user management (to store user credentials and to store user chats).
 
 ## Prerequisites
 
@@ -35,9 +35,12 @@ A scalable backend application for an AI-powered movie character chatbot. This p
    Create a `.env` file in the root with the following keys (update with your values):
    ```env
    PORT=3000
-   JWT_SECRET=your_jwt_secret
-   UPSTASH_REDIS_URL=redis://<username>:<password>@<host>:<port>
+   OPENAI_API_KEY = your OpenAI API key
+   PINECONE_API_KEY = your Pinecone API key to store vector embeddings data
+   UPSTASH_REDIS_URL= redis://<username>:<password>@<host>:<port> (get from upstash)
    MONGODB_URI=mongodb://<username>:<password>@<host>:<port>/database
+   JWT_SECRET=your_jwt_secret
+   
    ```
    > **Tip:** For local testing, you can run Redis and MongoDB instances locally or use Docker.
 
@@ -51,7 +54,7 @@ To start the development server with live-reloading via ts-node:
 npm run dev
 ```
 
-This starts the Express server on the port specified in your `.env` file and opens the WebSocket server on port 8080.
+This starts the Express server on the port specified in your `.env` file and opens the WebSocket server on same port.
 
 ### Production
 
@@ -83,10 +86,6 @@ The workers are automatically started when the app starts. Ensure your Redis ser
   ```
 - **Redis Connection Issues:**  
   Verify that the `UPSTASH_REDIS_URL` in your `.env` file is correct and that your Redis instance is running and accessible.
-
-## Contributing
-
-Contributions are welcome! Feel free to open issues or pull requests if you want to improve the project.
 
 ## License
 
