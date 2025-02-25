@@ -3,6 +3,11 @@
 A scalable backend application for an AI-powered movie character chatbot. This project leverages Node.js, Express, WebSockets, and BullMQ with Redis for background task processing.
 
 ## Features
+- **Authentication & Authorization:** Users must sign up or sign in to receive a JWT token. JWT token is required to authenticate and connect to WebSocket.
+   -  - **Authorization Header Format:**  
+    ```ws
+    authorization: Bearer <token>
+    ```
 
 - **Real-time Communication:** Uses WebSocketServer for real-time chat interactions.
 - **Rate Limiting:** Protects against abuse by limiting API calls (5 requests/second per user).
