@@ -9,6 +9,7 @@ const authRouter = express.Router();
 authRouter.post("/signup", async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
+    console.log(username, password);
     if (!username || !password) {
       res.status(400).json({ error: "username and password are requied" });
       return;
@@ -61,6 +62,7 @@ authRouter.post("/signin", async (req: Request, res: Response) => {
 
     res.status(200).json({
       token,
+      username,
       message: "User login successfull",
     });
   } catch (error) {

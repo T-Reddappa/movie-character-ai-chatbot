@@ -11,11 +11,11 @@ import { JWT_SECRET, PORT } from "./utils/config";
 import { connectDB } from "./scripts/database";
 import { searchDialogue } from "./services/search";
 import { aiResponseQueue, aiResponseQueueEvents } from "./services/queue";
-import { User } from "./models/user";
+import { Character, User } from "./models/user";
 import authRouter from "./routes/auth";
 import { saveChat } from "./services/saveChat";
 import { ExtendedWebSocket } from "./utils/types";
-import { send } from "node:process";
+import charactersRoute from "./routes/character";
 
 const app = express();
 app.use(express.json());
@@ -43,6 +43,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/auth", authRouter);
+app.use("/characters", charactersRoute);
 
 app.use((req, res, next) => {
   if (req.headers.upgrade === "websocket") return;
@@ -54,22 +55,19 @@ const tokenCache = new LRUCache<string, any>({ max: 1000 });
 
 wss.on("connection", async (ws: ExtendedWebSocket, req: IncomingMessage) => {
   try {
-    const token = req.headers["authorization"]?.split(" ")[1];
+    const url = new URL(req.url || "", `http://${req.headers.host}`);
+    const token = url.searchParams.get("token");
     if (!token) {
       ws.send(JSON.stringify({ error: "Authentication token required" }));
       ws.close();
       return;
     }
 
-    let decoded = tokenCache.get(token);
-    if (!decoded) {
-      decoded = jwt.verify(token, JWT_SECRET);
-      tokenCache.set(token, decoded);
-    }
+    let decoded = jwt.verify(token, JWT_SECRET);
+    tokenCache.set(token, decoded);
     console.log("WS**DECODED**:", decoded);
 
-    const user = await User.findOne(decoded.username);
-
+    const user = await User.findOne({ username: decoded });
     console.log("DECODED USER", user);
 
     if (!user) {
@@ -78,33 +76,44 @@ wss.on("connection", async (ws: ExtendedWebSocket, req: IncomingMessage) => {
       return;
     }
 
-    ws.username = user.username;
+    const userId = user._id;
+    console.log(userId.toString());
     console.log(
-      `New WebSocket connection established for user: ${ws.username}`
+      `New WebSocket connection established for user: ${user.username}`
     );
 
     ws.on("message", async (message) => {
       console.log(message);
       try {
-        const { character, user_message } = JSON.parse(message.toString());
-        ws.send(character, user_message);
+        const { userId, characterId, user_message } = JSON.parse(
+          message.toString()
+        );
 
-        if (!character || !user_message) {
-          ws.send(
-            JSON.stringify({ error: "character and user_message required" })
-          );
+        if (!userId || !characterId || !user_message) {
+          ws.send(JSON.stringify({ error: "Missing required fields" }));
           return;
         }
 
-        await saveChat(ws.username!, character, "user", user_message);
+        ws.send(
+          JSON.stringify({ character: user.username, response: user_message })
+        );
+
+        const characterData = await Character.findById(characterId);
+        if (!characterData) {
+          ws.send(JSON.stringify({ error: "Character not found" }));
+          return;
+        }
+
+        const characterName = characterData.name;
+
+        await saveChat(userId!.toString(), characterId, "user", user_message);
 
         const retrievedDialogue = await searchDialogue(user_message);
         const context = String(retrievedDialogue);
-        console.log("context#:", context);
 
         //ai response - bullmq queue
         const job = await aiResponseQueue.add("generateResponse", {
-          character,
+          characterName,
           user_message,
           context,
         });
@@ -114,9 +123,11 @@ wss.on("connection", async (ws: ExtendedWebSocket, req: IncomingMessage) => {
           15000
         );
 
-        await saveChat(ws.username!, character, "assistant", response);
+        await saveChat(userId!.toString(), characterId, "ai", response);
 
-        ws.send(JSON.stringify({ character: character, response: response }));
+        ws.send(
+          JSON.stringify({ character: characterName, response: response })
+        );
       } catch (error) {
         console.error("Error processing message:", error);
         ws.send(

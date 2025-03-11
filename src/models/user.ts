@@ -1,17 +1,29 @@
 import mongoose, { Schema } from "mongoose";
 
-export interface IUserSchmema extends Document {
+interface IUser extends Document {
   username: string;
   password: string;
+  chats: mongoose.Types.ObjectId[];
 }
 
-export interface IUserChatSchema extends Document {
-  username: String;
-  character: String;
-  messages: [{ role: String; content: String }];
+interface ICharacter extends Document {
+  name: string;
+  description: string;
+  image: string;
 }
 
-const UserSchema = new Schema<IUserSchmema>({
+interface IMessage {
+  sender: "user" | "ai";
+  text: string;
+  timestamp: Date;
+}
+interface IChat extends Document {
+  user: mongoose.Types.ObjectId;
+  character: mongoose.Types.ObjectId;
+  messages: IMessage[];
+}
+
+const UserSchema = new Schema<IUser>({
   username: {
     type: String,
     required: true,
@@ -25,21 +37,41 @@ const UserSchema = new Schema<IUserSchmema>({
     required: true,
     minlength: 6,
   },
+  chats: [{ type: mongoose.Schema.Types.ObjectId, ref: "Chat" }],
 });
 
-const UserChatSchema = new Schema({
-  username: { type: String, required: true },
-  character: { type: String, required: true },
-  messages: [
-    {
-      role: { type: String, enum: ["user", "assistant"], required: true },
-      content: { type: String },
+const ChatSchema = new Schema<IChat>(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-  ],
+    character: { type: mongoose.Schema.Types.ObjectId, required: true },
+    messages: [
+      {
+        sender: { type: String, enum: ["user", "ai"], required: true },
+        text: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const CharacterSchema = new Schema<ICharacter>({
+  name: { type: String, required: true },
+  description: { type: String, required: true },
+  image: { type: String },
 });
 
-export const User = mongoose.model<IUserSchmema>("User", UserSchema);
-export const UserChat = mongoose.model<IUserChatSchema>(
-  "UserChat",
-  UserChatSchema
+export const User = mongoose.model<IUser>("User", UserSchema);
+
+export const Chat = mongoose.model<IChat>("Chat", ChatSchema);
+
+export const Character = mongoose.model<ICharacter>(
+  "Character",
+  CharacterSchema
 );

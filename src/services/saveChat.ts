@@ -1,20 +1,20 @@
-import { UserChat } from "../models/user";
+import { Chat } from "../models/user";
 
 export const saveChat = async (
-  username: string,
-  character: string,
-  role: string,
-  content: string
+  userId: string,
+  characterId: string,
+  sender: "user" | "ai",
+  text: string
 ): Promise<void> => {
   try {
     process.nextTick(async () => {
-      await UserChat.updateOne(
-        { username, character },
+      await Chat.findOneAndUpdate(
+        { user: userId, character: characterId },
         {
           $push: {
             messages: {
-              role,
-              content,
+              sender,
+              text,
               timestamp: new Date(),
             },
           },

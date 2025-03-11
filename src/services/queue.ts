@@ -26,7 +26,7 @@ new Worker(
     console.log(" AIWORKER, processing job in aiResponseQueue");
 
     const aiResponse = await generateCharacterResponse(
-      job.data.character,
+      job.data.characterName,
       job.data.user_message,
       job.data.context
     );
